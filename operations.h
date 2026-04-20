@@ -4,12 +4,12 @@
 #include "square_matrix.h"
 
 // Складывает две матрицы
-SquareMatrix* addMatrices(const SquareMatrix* a, const SquareMatrix* b);
+void addMatrices(SquareMatrix* res, const SquareMatrix* a, const SquareMatrix* b);
 
 // Умножает две матрицы
-SquareMatrix* multiplyMatrices(const SquareMatrix* a, const SquareMatrix* b);
+void multiplyMatrices(SquareMatrix* res, const SquareMatrix* a, const SquareMatrix* b);
 
 // Умножает матрицу на скаляр
-SquareMatrix* MatrixByScalar(const SquareMatrix* a, const void* scalar);
+void MatrixByScalar(SquareMatrix* res, const SquareMatrix* a, const void* scalar);
 
 #endif

@@ -1,5 +1,6 @@
 #include "type_info_complex.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 // Выводит значение элемента
 static void printComplex(const void* a) {
@@ -40,7 +41,19 @@ static void zeroComplex(void* res) {
     r->im = 0.0;
 }
 
-static const TypeInfo complexTypeInfo = { sizeof(Complex), printComplex, addComplex, mulComplex, zeroComplex };
+static TypeInfo* complexTypeInfo = NULL;
 
 // Возвращает информацию о типе
-const TypeInfo* getComplexTypeInfo() { return &complexTypeInfo; }
+const TypeInfo* getComplexTypeInfo() {
+    if (complexTypeInfo == NULL) {
+        complexTypeInfo = (TypeInfo*)malloc(sizeof(TypeInfo));
+        if (complexTypeInfo) {
+            complexTypeInfo->size = sizeof(Complex);
+            complexTypeInfo->print = printComplex;
+            complexTypeInfo->add = addComplex;
+            complexTypeInfo->mul = mulComplex;
+            complexTypeInfo->zero = zeroComplex;
+        }
+    }
+    return complexTypeInfo;
+}

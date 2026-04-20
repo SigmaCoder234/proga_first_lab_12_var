@@ -9,10 +9,10 @@ typedef struct {
     const TypeInfo* typeInfo;
 } SquareMatrix;
 
-// Инициализирует матрицу
-SquareMatrix* initMatrix(int size, const TypeInfo* typeInfo);
+// Инициализирует матрицу, выделяя память только под данные
+void initMatrix(SquareMatrix* matrix, int size, const TypeInfo* typeInfo);
 
-// Освобождает память, выделенную под матрицу
+// Освобождает память, выделенную под данные матрицы
 void freeMatrix(SquareMatrix* matrix);
 
 // Задает значение элемента матрицы по заданным индексам
