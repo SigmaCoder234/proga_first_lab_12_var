@@ -8,6 +8,7 @@ add_executable(first_lab
     main.c
     square_matrix.c
     operations.c
+    errors.c
     type_info_double.c
     type_info_complex.c
     tests.c
@@ -19,6 +20,7 @@ add_executable(run_tests
     tests.c
     square_matrix.c
     operations.c
+    errors.c
     type_info_double.c
     type_info_complex.c
 )

@@ -2,14 +2,15 @@
 #define OPERATIONS_H
 
 #include "square_matrix.h"
+#include "errors.h"
 
 // Складывает две матрицы
-void addMatrices(SquareMatrix* res, const SquareMatrix* a, const SquareMatrix* b);
+OpStatus addMatrices(SquareMatrix* res, const SquareMatrix* a, const SquareMatrix* b);
 
 // Умножает две матрицы
-void multiplyMatrices(SquareMatrix* res, const SquareMatrix* a, const SquareMatrix* b);
+OpStatus multiplyMatrices(SquareMatrix* res, const SquareMatrix* a, const SquareMatrix* b);
 
 // Умножает матрицу на скаляр
-void MatrixByScalar(SquareMatrix* res, const SquareMatrix* a, const void* scalar);
+OpStatus MatrixByScalar(SquareMatrix* res, const SquareMatrix* a, const void* scalar);
 
 #endif

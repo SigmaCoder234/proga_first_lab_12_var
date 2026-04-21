@@ -4,18 +4,18 @@
 #include "type_info_complex.h"
 #include "square_matrix.h"
 #include "operations.h"
+#include "errors.h"
 
 int run_all_tests();
 
-// обеспечить возможность использования экзэмпляра матрицы на стеке, а не в динамической памяти
 // Безопасное ввод
 static void safe_input(void* value_ptr, int is_double) {
     int res;
     while (1) {
         if (is_double) {
             res = scanf("%lf", (double*)value_ptr);
-        }
-
+        } 
+        
         else {
             res = scanf("%d", (int*)value_ptr);
         }
@@ -25,8 +25,8 @@ static void safe_input(void* value_ptr, int is_double) {
 
         if (res == 1) {
             break;
-        }
-
+        } 
+        
         else {
             printf("Invalid input. Please try again: ");
         }
@@ -61,8 +61,8 @@ static void fill_matrix(SquareMatrix* m, const char* name) {
                 printf("%s[%d][%d] = ", name, i, j);
                 safe_input(&val, 1);
                 setElement(m, i, j, &val);
-            }
-
+            } 
+            
             else { // Complex
                 Complex val;
                 printf("%s[%d][%d] Re = ", name, i, j);
@@ -81,8 +81,8 @@ static void input_scalar(const TypeInfo* ti, void* scalar) {
     if (ti == getDoubleTypeInfo()) {
         printf("Enter a real number: ");
         safe_input(scalar, 1);
-    }
-
+    } 
+    
     else { // Complex
         Complex* c = (Complex*)scalar;
         printf("Enter the real part: ");
@@ -137,7 +137,9 @@ int main() {
 
                 if (A.data) {
                     printf("\nMatrix A (%dx%d) created successfully!\n", size, size);
-                } else {
+                } 
+                
+                else {
                     printf("\nMemory allocation error for Matrix A!\n");
                 }
                 break;
@@ -162,7 +164,9 @@ int main() {
                 
                 if (B.data) {
                     printf("\nMatrix B (%dx%d) created successfully!\n", size, size);
-                } else {
+                } 
+                
+                else {
                     printf("\nMemory allocation error for Matrix B!\n");
                 }
 
@@ -172,7 +176,9 @@ int main() {
             case 3:
                 if (!A.data) {
                     printf("\nInitialize matrix A first (option 1)!\n");
-                } else {
+                } 
+                
+                else {
                     fill_matrix(&A, "A");
                 }
                 break;
@@ -180,7 +186,9 @@ int main() {
             case 4:
                 if (!B.data) {
                     printf("\nInitialize matrix B first (option 2)!\n");
-                } else {
+                } 
+                
+                else {
                     fill_matrix(&B, "B");
                 }
                 break;
@@ -194,14 +202,18 @@ int main() {
                 if (A.data) {
                     printf("\nMatrix A:\n");
                     printMatrix(&A);
-                } else {
+                } 
+                
+                else {
                     printf("\nMatrix A is not initialized.\n");
                 }
 
                 if (B.data) {
                     printf("\nMatrix B:\n");
                     printMatrix(&B);
-                } else {
+                } 
+                
+                else {
                     printf("\nMatrix B is not initialized.\n");
                 }
                 break;
@@ -212,20 +224,23 @@ int main() {
                     break;
                 }
 
-                if (A.size != B.size || A.typeInfo != B.typeInfo) {
-                    printf("\nError: Matrices must have same sizes and types for addition!\n");
-                    break;
-                }
-
                 SquareMatrix C = {0};
                 initMatrix(&C, A.size, A.typeInfo);
 
                 if (C.data) {
-                    addMatrices(&C, &A, &B);
-                    printf("\nAddition result (A + B):\n");
-                    printMatrix(&C);
+                    OpStatus status = addMatrices(&C, &A, &B);
+                    if (status == OP_SUCCESS) {
+                        printf("\nAddition result (A + B):\n");
+                        printMatrix(&C);
+                    } 
+                    
+                    else {
+                        printOpError(status);
+                    }
                     freeMatrix(&C);
-                } else {
+                } 
+                
+                else {
                     printf("\nError during matrix addition (memory allocation)!\n");
                 }
                 break;
@@ -237,20 +252,23 @@ int main() {
                     break;
                 }
 
-                if (A.size != B.size || A.typeInfo != B.typeInfo) {
-                    printf("\nError: Matrices must have same sizes and types for multiplication!\n");
-                    break;
-                }
-
                 SquareMatrix C = {0};
                 initMatrix(&C, A.size, A.typeInfo);
 
                 if (C.data) {
-                    multiplyMatrices(&C, &A, &B);
-                    printf("\nMultiplication result (A * B):\n");
-                    printMatrix(&C);
+                    OpStatus status = multiplyMatrices(&C, &A, &B);
+                    if (status == OP_SUCCESS) {
+                        printf("\nMultiplication result (A * B):\n");
+                        printMatrix(&C);
+                    } 
+                    
+                    else {
+                        printOpError(status);
+                    }
                     freeMatrix(&C);
-                } else {
+                } 
+                
+                else {
                     printf("\nError during matrix multiplication (memory allocation)!\n");
                 }
                 break;
@@ -271,15 +289,21 @@ int main() {
                         if (matrixChoice == 1) {
                             targetMatrix = &A;
                             break;
-                        } else if (matrixChoice == 2) {
+                        } 
+                        
+                        if (matrixChoice == 2) {
                             targetMatrix = &B;
                             break;
                         }
                         printf("Error: input must be 1 or 2.\n");
                     }
-                } else if (A.data) {
+                }
+
+                else if (A.data) {
                     targetMatrix = &A;
-                } else {
+                }
+
+                else {
                     targetMatrix = &B;
                 }
 
@@ -295,11 +319,19 @@ int main() {
                 initMatrix(&C, targetMatrix->size, targetMatrix->typeInfo);
 
                 if (C.data) {
-                    MatrixByScalar(&C, targetMatrix, scalar);
-                    printf("\nScalar multiplication result:\n");
-                    printMatrix(&C);
+                    OpStatus status = MatrixByScalar(&C, targetMatrix, scalar);
+                    if (status == OP_SUCCESS) {
+                        printf("\nScalar multiplication result:\n");
+                        printMatrix(&C);
+                    } 
+                    
+                    else {
+                        printOpError(status);
+                    }
                     freeMatrix(&C);
-                } else {
+                } 
+                
+                else {
                     printf("\nError during multiplication (memory allocation)!\n");
                 }
 

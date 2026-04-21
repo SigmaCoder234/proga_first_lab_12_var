@@ -1,11 +1,59 @@
 #include "square_matrix.h"
 #include "operations.h"
+#include "errors.h"
 #include "type_info_double.h"
 #include "type_info_complex.h"
 #include <assert.h>
 #include <stdio.h>
 
-// тесты на возвращение ошибок и обработку колец
+// Тестирует операции TypeInfo для double
+static void test_type_info_double_operations() {
+    printf("test_type_info_double_operations... ");
+    const TypeInfo* ti = getDoubleTypeInfo();
+    double a, b, res;
+
+    // Test zero
+    ti->zero(&res);
+    assert(res == 0.0);
+
+    // Test add
+    a = 5.0; b = 3.0;
+    ti->add(&res, &a, &b);
+    assert(res == 8.0);
+
+    // Test mul
+    a = 5.0; b = 3.0;
+    ti->mul(&res, &a, &b);
+    assert(res == 15.0);
+
+    printf("OK\n");
+}
+
+// Тестирует операции TypeInfo для complex
+static void test_type_info_complex_operations() {
+    printf("test_type_info_complex_operations... ");
+    const TypeInfo* ti = getComplexTypeInfo();
+    Complex a, b, res;
+
+    // Test zero
+    ti->zero(&res);
+    assert(res.re == 0.0 && res.im == 0.0);
+
+    // Test add
+    a.re = 1.0; a.im = 2.0;
+    b.re = 3.0; b.im = 4.0;
+    ti->add(&res, &a, &b);
+    assert(res.re == 4.0 && res.im == 6.0);
+
+    // Test mul
+    a.re = 1.0; a.im = 2.0; // (1 + 2i)
+    b.re = 3.0; b.im = 4.0; // (3 + 4i)
+    // (1*3 - 2*4) + (1*4 + 2*3)i = (3 - 8) + (4 + 6)i = -5 + 10i
+    ti->mul(&res, &a, &b);
+    assert(res.re == -5.0 && res.im == 10.0);
+
+    printf("OK\n");
+}
 
 // Тестирует инициализацию матрицы и установку/получение элементов для double
 static void test_init_matrix_double() {
@@ -65,7 +113,7 @@ static void test_add_matrix_double() {
     setElement(&m1, 0, 0, &v1);
     setElement(&m2, 0, 0, &v2);
     
-    addMatrices(&res, &m1, &m2);
+    assert(addMatrices(&res, &m1, &m2) == OP_SUCCESS);
     assert(*(double*)getElement(&res, 0, 0) == 12.0);
     
     freeMatrix(&m1);
@@ -87,7 +135,7 @@ static void test_add_matrix_complex() {
     setElement(&m1, 0, 0, &c1);
     setElement(&m2, 0, 0, &c2);
     
-    addMatrices(&res, &m1, &m2);
+    assert(addMatrices(&res, &m1, &m2) == OP_SUCCESS);
     Complex* res_c = (Complex*)getElement(&res, 0, 0);
     assert(res_c->re == 4.0 && res_c->im == 6.0);
 
@@ -112,7 +160,7 @@ static void test_multiply_matrix_double() {
     v = 2.0; setElement(&m2, 0, 0, &v); v = 0.0; setElement(&m2, 0, 1, &v);
     v = 1.0; setElement(&m2, 1, 0, &v); v = 2.0; setElement(&m2, 1, 1, &v);
     
-    multiplyMatrices(&res, &m1, &m2);
+    assert(multiplyMatrices(&res, &m1, &m2) == OP_SUCCESS);
 
     assert(*(double*)getElement(&res, 0, 0) == 4.0);
     assert(*(double*)getElement(&res, 0, 1) == 4.0);
@@ -147,7 +195,7 @@ static void test_multiply_matrix_complex() {
     setElement(&m2, 1, 0, &zero_val);
     setElement(&m2, 1, 1, &i_val);
 
-    multiplyMatrices(&res, &m1, &m2);
+    assert(multiplyMatrices(&res, &m1, &m2) == OP_SUCCESS);
 
     Complex* res_00 = (Complex*)getElement(&res, 0, 0);
     Complex* res_01 = (Complex*)getElement(&res, 0, 1);
@@ -177,8 +225,8 @@ static void test_scalar_multiply_double() {
     
     double scalar = 2.0;
     
-    MatrixByScalar(&res, &m, &scalar);
-    
+    assert(MatrixByScalar(&res, &m, &scalar) == OP_SUCCESS);
+
     double* res_d = (double*)getElement(&res, 0, 0);
     assert(*res_d == 10.0);
     
@@ -199,8 +247,8 @@ static void test_scalar_multiply_complex() {
     
     Complex scalar = {2.0, -1.0};
     
-    MatrixByScalar(&res, &m, &scalar);
-    
+    assert(MatrixByScalar(&res, &m, &scalar) == OP_SUCCESS);
+
     Complex* res_c = (Complex*)getElement(&res, 0, 0);
     assert(res_c->re == 4.0);
     assert(res_c->im == 3.0);
@@ -210,7 +258,6 @@ static void test_scalar_multiply_complex() {
     printf("OK\n");
 }
 
-
 // Тестирует обработку ошибок
 static void test_error_handling() {
     printf("test_error_handling... ");
@@ -218,22 +265,23 @@ static void test_error_handling() {
     initMatrix(&m, 2, getDoubleTypeInfo());
     initMatrix(&res, 2, getDoubleTypeInfo());
 
-    addMatrices(&res, &m, NULL); // Сложение с NULL
-    multiplyMatrices(&res, NULL, &m); // Умножение с NULL
-    MatrixByScalar(&res, NULL, NULL); // Умножение на скаляр с NULL
+    // Тест на NULL указатели
+    assert(addMatrices(&res, &m, NULL) == OP_ERROR_NULL_POINTER);
+    assert(multiplyMatrices(&res, NULL, &m) == OP_ERROR_NULL_POINTER);
+    assert(MatrixByScalar(&res, NULL, NULL) == OP_ERROR_NULL_POINTER);
     
     // Тест на несовместимые размеры
     SquareMatrix m_diff_size = {0};
     initMatrix(&m_diff_size, 3, getDoubleTypeInfo());
-    addMatrices(&res, &m, &m_diff_size);
-    multiplyMatrices(&res, &m, &m_diff_size);
+    assert(addMatrices(&res, &m, &m_diff_size) == OP_ERROR_SIZE_MISMATCH);
+    assert(multiplyMatrices(&res, &m, &m_diff_size) == OP_ERROR_SIZE_MISMATCH);
     freeMatrix(&m_diff_size);
 
     // Тест на несовместимые типы
     SquareMatrix m_diff_type = {0};
     initMatrix(&m_diff_type, 2, getComplexTypeInfo());
-    addMatrices(&res, &m, &m_diff_type);
-    multiplyMatrices(&res, &m, &m_diff_type);
+    assert(addMatrices(&res, &m, &m_diff_type) == OP_ERROR_TYPE_MISMATCH);
+    assert(multiplyMatrices(&res, &m, &m_diff_type) == OP_ERROR_TYPE_MISMATCH);
     freeMatrix(&m_diff_type);
 
     freeMatrix(&m);
@@ -244,6 +292,8 @@ static void test_error_handling() {
 // Запускает все тесты
 int run_all_tests() {
     printf("\n========= Running tests =========\n\n");
+    test_type_info_double_operations();
+    test_type_info_complex_operations();
     test_init_matrix_double();
     test_init_matrix_complex();
     test_add_matrix_double();
@@ -256,3 +306,9 @@ int run_all_tests() {
     printf("\n====== All tests passed! ======\n\n");
     return 0;
 }
+
+#ifdef RUN_TESTS_MAIN
+int main() {
+    return run_all_tests();
+}
+#endif
